@@ -69,11 +69,12 @@ export default function SkiJumpGame() {
         <div className="overlay" id="intro"><div className="modal">
           <div className="kicker">❄ FROST FLIGHT ❄</div>
           <h1>GUESS CLOSER.<br /><em>FLY FURTHER.</em></h1>
-          <p>
+          <p className="desktopIntro">
             Uncle Austen starts at the top of the jump. Hit <strong>DROP IN</strong> to start the run. A question will appear,
             you have 25 seconds to type your numerical guess, and when you submit, he launches from the ramp. The closer
             your guess is to the real answer, the longer the jump. After each landing, the correct answer is revealed.
           </p>
+          <p className="mobileIntro">Seven number guesses. 25 seconds each. Closer guesses send Uncle Austen further!</p>
           <button className="btn" id="start">DROP IN →</button>
         </div></div>
 

@@ -75,3 +75,24 @@ The leaderboard table scrolls horizontally when necessary.
 
 No Supabase migration is needed for this layout update. Keep your existing
 `.env.local` in your own project; it is deliberately not distributed.
+
+## V9.3 - portrait gameplay for mobile
+
+This version is a full mobile camera and layout update, not just a CSS change.
+
+- At widths up to 700px, the game canvas becomes a portrait 420 x 760 virtual viewport (rendered at 2x pixel density).
+- The camera tracks the ski jumper both horizontally and vertically during descent and flight, with portrait-specific zoom and hard on-screen bounds.
+- The scene is no longer cropped to fit a tall screen; snow and parallax background are also adapted to portrait dimensions.
+- The question panel, intro, results, and final leaderboard submission fit in portrait using touch-friendly bottom sheets.
+- Desktop continues to use the existing 960 x 540 widescreen camera and UI.
+- Existing numeric scoring, daily reset, Supabase integration, and per-browser attempt tracking are preserved.
+
+### Update your existing project
+
+Copy these three files into your existing `frostflight-next` directory:
+
+- `src/lib/gameEngine.ts`
+- `src/app/globals.css`
+- `src/components/SkiJumpGame.tsx`
+
+Keep your `.env.local` file and all Supabase settings. Run `npm run dev` and test in a phone-sized browser viewport. When the result looks right, commit and push those files to GitHub for deployment.
