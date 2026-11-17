@@ -15,9 +15,13 @@ export async function POST(request: Request) {
   const data = body as Record<string, unknown>;
   const name = typeof data.name === 'string' ? data.name.trim().replace(/\s+/g, ' ') : '';
   const guesses = data.guesses;
+  const deviceId = typeof data.deviceId === 'string' ? data.deviceId : '';
   const day = utcDay();
   if (name.length < 2 || name.length > 24 || /[<>\r\n]/.test(name)) {
     return NextResponse.json({ error: 'Enter a name between 2 and 24 characters.' }, { status: 400 });
+  }
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(deviceId)) {
+    return NextResponse.json({ error: 'Your browser identifier is missing. Refresh the page and try again.' }, { status: 400 });
   }
   if (data.day !== day) {
     return NextResponse.json({ error: 'The daily leaderboard has reset. Play a fresh round to submit to today\'s board.' }, { status: 409 });
@@ -29,7 +33,7 @@ export async function POST(request: Request) {
   const distances = guesses.map((guess, index) => evaluateGuess(index, guess === null ? '' : String(guess)).distance);
   const total = distances.reduce((sum, value) => sum + value, 0);
   try {
-    const saved = await saveAttempt(day, name, guesses, total);
+    const saved = await saveAttempt(day, name, guesses, total, deviceId);
     return NextResponse.json({ entry: saved, distances, total });
   } catch (error) {
     return NextResponse.json({ error: (error as Error).message }, { status: 503 });

@@ -48,3 +48,20 @@ A player may play again and create a new attempt number each time. Attempt numbe
 
 ## New key migration
 The server REST client uses `SUPABASE_SECRET_KEY` only in the `apikey` header. It intentionally does NOT send a new `sb_secret_...` value as a Bearer authorization token. The browser-facing publishable key is included for future browser-side features; this leaderboard currently talks to Supabase exclusively through the Next.js API routes.
+
+## V9.1 — Separate browser attempt numbers
+
+The former attempt number was a global daily submission counter. V9.1 keeps that
+number (now labelled **Global entry**) and adds **Player attempt** (per browser,
+per UTC day). A new browser starts at player attempt #1 even if other users have
+already submitted scores. The browser ID is stored locally; it isn't a login or
+an identity check, and clearing site data, private browsing, or using another
+browser/device can produce a new player number.
+
+**Existing Supabase projects:** run `supabase/attempt-numbers-migration.sql` once
+using the Supabase SQL Editor, then deploy this updated code. Existing rows
+cannot be matched to browsers retroactively and show `—` in the player-attempt
+column. Do not rerun the original `schema.sql` as a migration.
+
+**Deployment:** keep existing `.env.local` and Vercel secrets; no new environment
+variables are required. Deploy from your `frostflight-next` project folder.

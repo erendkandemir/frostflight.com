@@ -2,6 +2,7 @@ export type LeaderboardEntry = {
   id: string;
   challenge_date: string;
   attempt_number: number;
+  player_attempt_number: number | null;
   player_name: string;
   total_distance: number;
   created_at: string;
@@ -34,7 +35,7 @@ async function requestSupabase(path: string, init: RequestInit = {}) {
 
 export async function getLeaderboard(day: string) {
   const params = new URLSearchParams({
-    select: 'id,challenge_date,attempt_number,player_name,total_distance,created_at',
+    select: 'id,challenge_date,attempt_number,player_attempt_number,player_name,total_distance,created_at',
     challenge_date: `eq.${day}`,
     order: 'total_distance.desc,created_at.asc',
     limit: '50',
@@ -53,7 +54,7 @@ export async function getLeaderboard(day: string) {
   };
 }
 
-export async function saveAttempt(day: string, name: string, guesses: Array<number | null>, total: number) {
+export async function saveAttempt(day: string, name: string, guesses: Array<number | null>, total: number, deviceId: string) {
   const response = await requestSupabase('rpc/submit_daily_attempt', {
     method: 'POST',
     body: JSON.stringify({
@@ -61,6 +62,7 @@ export async function saveAttempt(day: string, name: string, guesses: Array<numb
       p_name: name,
       p_guesses: guesses,
       p_total: total,
+      p_device_id: deviceId,
     }),
   });
   const result = (await response.json()) as Array<LeaderboardEntry> | LeaderboardEntry;

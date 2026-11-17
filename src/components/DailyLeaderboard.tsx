@@ -8,6 +8,7 @@ type Entry = {
   id: string;
   challenge_date: string;
   attempt_number: number;
+  player_attempt_number: number | null;
   player_name: string;
   total_distance: number;
   created_at: string;
@@ -55,6 +56,16 @@ function FinalSubmission() {
   const [confirmed, setConfirmed] = useState<Entry | null>(null);
   const [connected, setConnected] = useState<boolean | null>(null);
 
+  function browserId(): string {
+    const key = 'frostflight-browser-id-v1';
+    let id = window.localStorage.getItem(key);
+    if (!id) {
+      id = window.crypto.randomUUID();
+      window.localStorage.setItem(key, id);
+    }
+    return id;
+  }
+
   useEffect(() => {
     const finished = (event: Event) => {
       const detail = (event as CustomEvent<Run>).detail;
@@ -78,7 +89,7 @@ function FinalSubmission() {
       const response = await fetch('/api/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, guesses: run.guesses, day: run.day }),
+        body: JSON.stringify({ name, guesses: run.guesses, day: run.day, deviceId: browserId() }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Could not save score.');
@@ -92,7 +103,7 @@ function FinalSubmission() {
   return <div className="submitPanel">
     {confirmed ? <div className="saveConfirmed" role="status">
       <strong>YOU'RE ON THE BOARD!</strong>
-      <span>Attempt #{confirmed.attempt_number} today • {confirmed.player_name} • {confirmed.total_distance}m</span>
+      <span>Your attempt #{confirmed.player_attempt_number ?? '?'} today • Global entry #{confirmed.attempt_number} • {confirmed.player_name} • {confirmed.total_distance}m</span>
       <span>Check the global leaderboard below the game.</span>
     </div> : <>
       <label className="submitLabel" htmlFor="player-name">ADD YOUR NAME TO TODAY'S LEADERBOARD</label>
@@ -147,9 +158,9 @@ function LeaderboardTable() {
       <div><div className="boardKicker">SSX EXETER • DAILY CHALLENGE</div><h2>GLOBAL LEADERBOARD</h2><div className="boardDate">{board.day} (UTC) · Top 50 attempts</div></div>
       <div className="boardStats"><strong>{board.attempts}</strong><span>ATTEMPTS TODAY</span><button type="button" onClick={() => void refresh()} aria-label="Refresh leaderboard">↻ REFRESH</button></div>
     </header>
-    {loading ? <p className="boardMessage">Loading leaderboard...</p> : error ? <p className="boardMessage" role="alert">{error}</p> : !board.configured ? <p className="boardMessage">The global leaderboard is not connected yet. Add the server-side Supabase environment variables and run the SQL setup to activate saved scores and attempt numbers.</p> : board.entries.length === 0 ? <p className="boardMessage">No attempts yet today. Be the first to complete all seven jumps!</p> : <div className="boardScroll"><table className="boardTable"><thead><tr><th>RANK</th><th>NAME</th><th>ATTEMPT</th><th>TOTAL DISTANCE</th></tr></thead><tbody>
-      {board.entries.map((entry, index) => <tr key={entry.id}><td>{String(index + 1).padStart(2, '0')}</td><td>{entry.player_name}</td><td>#{entry.attempt_number}</td><td className="boardDistance">{entry.total_distance.toLocaleString('en-GB')}m</td></tr>)}
+    {loading ? <p className="boardMessage">Loading leaderboard...</p> : error ? <p className="boardMessage" role="alert">{error}</p> : !board.configured ? <p className="boardMessage">The global leaderboard is not connected yet. Add the server-side Supabase environment variables and run the SQL setup to activate saved scores and attempt numbers.</p> : board.entries.length === 0 ? <p className="boardMessage">No attempts yet today. Be the first to complete all seven jumps!</p> : <div className="boardScroll"><table className="boardTable"><thead><tr><th>RANK</th><th>NAME</th><th>PLAYER ATTEMPT</th><th>GLOBAL ENTRY</th><th>TOTAL DISTANCE</th></tr></thead><tbody>
+      {board.entries.map((entry, index) => <tr key={entry.id}><td>{String(index + 1).padStart(2, '0')}</td><td>{entry.player_name}</td><td>{entry.player_attempt_number === null ? '—' : `#${entry.player_attempt_number}`}</td><td>#{entry.attempt_number}</td><td className="boardDistance">{entry.total_distance.toLocaleString('en-GB')}m</td></tr>)}
     </tbody></table></div>}
-    <p className="boardFootnote">The board resets at 00:00 UTC. Attempt numbers count completed submissions today, not individual guesses. Multiple attempts are allowed; each saved run gets a new attempt number.</p>
+    <p className="boardFootnote">The board resets at 00:00 UTC. Global entry numbers count every submission; your personal attempt number counts submissions from this browser today. Clearing browser storage or using another browser/device starts a separate count.</p>
   </section>;
 }
