@@ -15,9 +15,29 @@ export function mountGame() {
   }
   const available = (name) => art[name]?.complete && art[name]?.naturalWidth > 0;
 
-  const W = 960, H = 540, SCALE = 3;
-  canvas.width = W * SCALE; canvas.height = H * SCALE;
+  // A real portrait world viewport on phones, not a cropped desktop canvas.
+  // World geometry stays unchanged; only the viewport, framing and camera differ.
+  let portrait = window.matchMedia('(max-width: 700px)').matches;
+  let W = portrait ? 420 : 960;
+  let H = portrait ? 600 : 540;
+  const SCALE = portrait ? 2 : 3;
+  function resizeCanvas() {
+    const next = window.matchMedia('(max-width: 700px)').matches;
+    if (next === portrait && canvas.width === W * pixelScale) return;
+    portrait = next;
+    W = portrait ? 420 : 960;
+    H = portrait ? 600 : 540;
+    const density = portrait ? 2 : 3;
+    canvas.width = W * density;
+    canvas.height = H * density;
+    ctx.imageSmoothingEnabled = false;
+    pixelScale = density;
+  }
+  let pixelScale = SCALE;
+  canvas.width = W * pixelScale;
+  canvas.height = H * pixelScale;
   ctx.imageSmoothingEnabled = false;
+  window.addEventListener('resize', resizeCanvas, { signal: abort.signal });
   const questions = numericQuestions;
   const hash = (x, y = 0) => { let z = Math.sin(x * 127.13 + y * 319.73) * 43758.55; return z - Math.floor(z); };
   const lerp = (a,b,t) => a+(b-a)*t;
@@ -271,6 +291,24 @@ export function mountGame() {
   // Hard screen-space constraints guarantee that the player never leaves frame,
   // even during the high-speed transition from close-up to wide flight coverage.
   function updateCamera(dt,p){
+    // Portrait: exact centre lock, on EVERY frame, including camera zoom transitions.
+    // The skier image is drawn relative to the ski contact point; offset the camera
+    // vertically to centre the skier's actual body rather than his boot tips.
+    if (portrait) {
+      let desiredZoom;
+      if (state === 'intro') desiredZoom = 1.12;
+      else if (state === 'answering' || state === 'launch') desiredZoom = 1.28;
+      else if (state === 'flight') {
+        const transition = ease(clamp(flightElapsed / 1.15, 0, 1));
+        desiredZoom = lerp(1.28, .82, transition);
+      } else desiredZoom = .82;
+      camera.z = lerp(camera.z, desiredZoom, 1 - Math.exp(-dt * 9));
+      // Do not ease camera position: a delay is enough to push a fast skier out
+      // of frame. Lock to the exact current position after computing zoom.
+      camera.x = p.x;
+      camera.y = p.y - 39;
+      return;
+    }
     let desired;
     if(state==='intro'){
       desired={x:464,y:230,z:1.08,screenX:485,screenY:210};
@@ -307,17 +345,33 @@ export function mountGame() {
     if(state==='launch'){launchElapsed+=dt;if(launchElapsed>=.62){state='flight';flightElapsed=0;status('FLIGHT CAMERA / SKIER LOCKED')}}
     if(state==='flight'){flightElapsed+=dt;if(flightElapsed>=4.1){flightElapsed=4.1;endJump()}}
     const p=position();updateCamera(dt,p);
-    ctx.save();ctx.setTransform(SCALE,0,0,SCALE,0,0);drawSky(sceneTime,camera.x);
+    ctx.save();ctx.setTransform(pixelScale,0,0,pixelScale,0,0);
+    if (portrait) {
+      ctx.save();ctx.scale(1,H/540);ctx.translate((W-960)/2,0);drawSky(sceneTime,camera.x);ctx.restore();
+    } else drawSky(sceneTime,camera.x);
     ctx.translate(W/2,H/2);ctx.scale(camera.z,camera.z);ctx.translate(-camera.x,-camera.y);
     terrain();spectators();ramp();
     // Air trails and carved powder around skier while in motion.
     if(state==='answering'){for(let i=0;i<34;i++){const x=p.x-12-hash(i,9)*80,y=p.y+hash(i,12)*23-7;rect(x,y,1.1+hash(i,14)*2,1,'#d5f5ff')}}
     skier(p.x,p.y,p.angle,!!p.air,sceneTime);
-    if(state==='intro' || state==='answering' || state==='launch') drawAustenTag(p.x,p.y);
+    if(!portrait && (state==='intro' || state==='answering' || state==='launch')) drawAustenTag(p.x,p.y);
     ctx.restore();
-    ctx.save();ctx.setTransform(SCALE,0,0,SCALE,0,0);snow(sceneTime,state==='answering'||state==='flight');
-    if(state==='answering'){for(let i=0;i<20;i++){const y=140+i*18+hash(i,62)*15;const x=(hash(i,64)*1100+sceneTime*(90+i*4))%1100-100;line(x,y,x-65-hash(i,72)*60,y+8,'#d3f1fa',i%4===0?1.6:.6)}}
-    if(state==='flight'){ctx.textAlign='center';ctx.font='bold 12px monospace';rect(370,109,220,32,'#08233fe8');ctx.fillStyle='#e9f8fa';ctx.fillText(`LIVE DISTANCE  ${Math.floor(target*clamp(flightElapsed/4.1,0,1))} m`,480,129)}
+    ctx.save();ctx.setTransform(pixelScale,0,0,pixelScale,0,0);
+    if (portrait) {ctx.save();ctx.scale(W/960,H/540);snow(sceneTime,state==='answering'||state==='flight');ctx.restore();}
+    else snow(sceneTime,state==='answering'||state==='flight');
+    if(state==='answering'){for(let i=0;i<20;i++){const y=(portrait?95:140)+i*(portrait?21:18)+hash(i,62)*15;const x=(hash(i,64)*(W+140)+sceneTime*(90+i*4))%(W+140)-100;line(x,y,x-65-hash(i,72)*60,y+8,'#d3f1fa',i%4===0?1.6:.6)}}
+    if (portrait && (state === 'intro' || state === 'answering' || state === 'launch')) {
+      // A lightweight HUD tag: unlike the old world-space label, it does not
+      // grow into an enormous banner as the camera zooms.
+      rect(238, 219, 140, 25, '#273e5d');
+      rect(241, 222, 134, 19, '#fff8eb');
+      ctx.textAlign = 'left'; ctx.fillStyle = '#273e5d';
+      ctx.font = 'bold 12px monospace';
+      ctx.fillText('UNCLE AUSTEN', 247, 235);
+      line(242, 245, 218, 278, '#263c59', 2);
+      polygon([[218, 278], [227, 273], [222, 284]], '#c4565c');
+    }
+    if(state==='flight'){ctx.textAlign='center';ctx.font='bold 12px monospace';rect(portrait?100:370,portrait?143:109,220,32,'#08233fe8');ctx.fillStyle='#e9f8fa';ctx.fillText(`LIVE DISTANCE  ${Math.floor(target*clamp(flightElapsed/4.1,0,1))} m`,portrait?210:480,portrait?163:129)}
     ctx.restore();frame=requestAnimationFrame(render);
   }
   const total=()=>scores.reduce((a,b)=>a+b,0);
