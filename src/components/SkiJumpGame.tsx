@@ -13,7 +13,7 @@ export default function SkiJumpGame() {
   return (
     <div className="wrap">
       <div className="outerbar">
-        <div className="brand">❄ FROST FLIGHT <span style={{ color: '#b34e59' }}>/ NUMERIC JUMP</span></div>
+        <div className="brand">❄ FROST FLIGHT <span style={{ color: '#b34e59' }}>/ LENG AND CERTI GAME</span></div>
         <DailyLeaderboard location="clock" />
       </div>
       <main className="game">
