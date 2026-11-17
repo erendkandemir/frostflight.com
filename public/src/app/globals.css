@@ -436,3 +436,84 @@ body{background:repeating-linear-gradient(135deg,#d0e0ef 0 12px,#d6e7f1 12px 24p
   .status { top: 130px; }
   .logo { font-size: 12px; }
 }
+
+
+/* V9.4 — Mobile centre-lock gameplay: independent 420 x 600 stage and
+   question form BELOW the stage, never drawn over Uncle Austen. */
+@media (max-width: 700px) {
+  .game {
+    display: block;
+    aspect-ratio: auto;
+    height: auto;
+    min-height: 0;
+    padding: 142.857% 0 0;
+    overflow: hidden;
+    background: #c4e1ed;
+  }
+  .game canvas {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: auto;
+    width: 100%; height: auto;
+    aspect-ratio: 420 / 600;
+    object-fit: contain;
+    image-rendering: pixelated;
+    z-index: 0;
+  }
+  .top {
+    position: absolute;
+    inset: 0 0 auto;
+    padding: 9px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    z-index: 4;
+    pointer-events: none;
+  }
+  .titleRow { gap: 6px; }
+  .ssxMark { height: 29px; width: 29px; }
+  .logo { font-size: 13px; line-height: 1.2; letter-spacing: -.5px; }
+  .sub { font-size: 6px; margin: 2px 0 0; line-height: 1.3; }
+  .hudright { align-self: flex-start; margin: 5px 0 0; gap: 4px; }
+  .chip { min-width: 61px; padding: 3px 6px; box-shadow: 2px 2px 0 #243b58; }
+  .chip small { font-size: 6px; margin: 0 0 2px; }
+  .chip b { font-size: 14px; }
+  .progress { top: 102px; left: 10px; }
+  .status { top: 119px; left: 10px; max-width: calc(100% - 20px); }
+  .panel {
+    display: block;
+    position: relative;
+    inset: auto;
+    z-index: 5;
+    width: auto;
+    margin: 0;
+    padding: 14px 13px 16px;
+    border: 0;
+    border-top: 4px solid #2a4567;
+    box-shadow: inset 0 3px 0 #c9ddec;
+    background: #fafbf3;
+    clip-path: none;
+  }
+  .panel h2 { font-size: clamp(17px, 4.8vw, 23px); line-height: 1.2; margin: 9px 0 13px; }
+  .answer { height: 48px; font-size: 17px; }
+  .actions { gap: 9px; }
+  .actions .btn { min-height: 48px; }
+  .actions .caption { font-size: 10px; }
+  .overlay, #intro, #intermission, #end {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 10px;
+  }
+  .overlay .modal, #intro .modal, #end .modal {
+    max-height: min(75%, 450px);
+    overflow-y: auto;
+  }
+}
+@media (max-width: 360px) {
+  .logo { font-size: 11px; }
+  .sub { font-size: 5.5px; }
+  .actions .caption { display: none; }
+  .actions .btn { width: 100%; }
+}
