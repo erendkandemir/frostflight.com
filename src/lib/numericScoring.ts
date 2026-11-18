@@ -14,37 +14,36 @@ export type NumericScoreResult = {
   explanation: string;
 };
 
+
 export const numericQuestions: NumericQuestion[] = [
   {
-    q: 'How many women did Klaid talk to today?',
-    answer: 2,
-  },
-  {
-    q: 'What is Frosty\'s Vaults attendance this year (number of times)?',
+    q: "How many years ago was the SSX ski trip that inspired Jubel?",
     answer: 11,
   },
   {
-    q: 'How many followers does Snowsports Exeter have on Instagram? (Guess to the nearest thousand.)',
-    answer: 10000,
-    answerLabel: '10,000',
+    q: "How much does Uncle Austen weigh (in kg)?",
+    answer: 73,
   },
   {
-    q: 'What house number on Pennsylvania Road does Austen live at?',
-    answer: 97,
+    q: "How many tonnes of snow were imported for Chill Hill 2024?",
+    answer: 50,
   },
   {
-    q: 'How old is Klaid?',
-    answer: 20,
+    q: "How many TP cups are at 97 Pennsylvania Road?",
+    answer: 29,
   },
   {
-    q: 'When was Timepiece Exeter founded?',
-    answer: 1974,
+    q: "How much money did SSX raise for Movember in 2023 (in £)?",
+    answer: 3200,
+    answerLabel: "£3,200",
   },
   {
-    q: 'How many different drinks are served in the Impy?',
-    answer: 184,
+    q: "How many Instagram followers did Josh McGann have on 18 November 2026 at 18:36?",
+    answer: 1537,
+    answerLabel: "1,537",
   },
 ];
+
 
 export function parseGuess(input: string): number | null {
   const cleaned = input.replace(/,/g, '').trim();
