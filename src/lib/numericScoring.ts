@@ -42,6 +42,11 @@ export const numericQuestions: NumericQuestion[] = [
     answer: 1537,
     answerLabel: "1,537",
   },
+  {
+  q: "How many pints did Klaid chop last night?",
+  answer: 6,
+},
+
 ];
 
 
